@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+    body {
+      background-color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #gameContainer {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+      margin-top: 20px;
+    }
+    
+    .score {
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div class="score" id="score">Score: 0</div>
+      </div>
+  <script>
+    // Get the canvas element and its context
+    const canvas = document.getElementById('gameCanvas');
+    const context = canvas.getContext('2d');
+
+    // Game settings
+    const tileSize = 20;
+    const tileCount = canvas.width / tileSize;
+
+    // Snake object
+    let snake = {
+      x: 0,
+      y: 0,
+      dx: tileSize,
+      dy: 0,
+      cells: [],
+      maxCells: 4
+    };
+
+    // Food object
+    let food = {
+      x: 0,
+      y: 0
+    };
+
+    // Score count
+    let score = 0;
+    const scoreElement = document.getElementById('score');
+
+    // Game loop
+    function gameLoop() {
+      requestAnimationFrame(gameLoop);
+
+      // Slow down the game speed
+      if (++count < 4) {
+        return;
+      }
+
+      count = 0;
+
+      // Clear the canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Move the snake
+      snake.x += snake.dx;
+      snake.y += snake.dy;
+
+      // Wrap the snake around the edges
+      if (snake.x < 0) {
+        snake.x = canvas.width - tileSize;
+      } else if (snake.x >= canvas.width) {
+        snake.x = 0;
+      }
+      if (snake.y < 0) {
+        snake.y = canvas.height - tileSize;
+      } else if (snake.y >= canvas.height) {
+        snake.y = 0;
+      }
+
+      // Draw the snake
+      snake.cells.unshift({ x: snake.x, y: snake.y });
+      if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
+      }
+
+      context.fillStyle = '#777';
+      for (let i = 0; i < snake.cells.length; i++) {
+        const cell = snake.cells[i];
+        drawCell(cell.x, cell.y, i);
+      }
+
+      // Draw the food
+      drawCell(food.x, food.y, -1, '#7eff7e');
+
+      // Check for collision with food
+      if (snake.x === food.x && snake.y === food.y) {
+        // Increase the score
+        score++;
+        scoreElement.textContent = 'Score: ' + score;
+
+        // Generate new food position
+        food.x = getRandomInt(0, tileCount - 1) * tileSize;
+        food.y = getRandomInt(0, tileCount - 1) * tileSize;
+
+        // Increase the snake length
+        snake.maxCells++;
+      }
+
+      // Check for collision with the snake's body
+      for (let i = 1; i < snake.cells.length; i++) {
+        if (snake.cells[i].x === snake.x && snake.cells[i].y === snake.y) {
+          // Game over
+          snake.x = 0;
+          snake.y = 0;
+          snake.cells = [];
+          snake.maxCells = 4;
+          score = 0;
+          scoreElement.textContent = 'Score: ' + score;
+        }
+      }
+    }
+
+    // Draw a single cell of the snake or food
+    function drawCell(x, y, index, color = '#999') {
+      context.fillStyle = color;
+      context.fillRect(x, y, tileSize, tileSize);
+      context.strokeStyle = '#000';
+      context.strokeRect(x, y, tileSize, tileSize);
+
+      if (index !== -1) {
+        context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        context.fillRect(x, y, tileSize, tileSize);
+      }
+    }
+
+    // Generate a random integer between min and max (inclusive)
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Keyboard input handling
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowUp' && snake.dy !== tileSize) {
+        snake.dx = 0;
+        snake.dy = -tileSize;
+      } else if (event.key === 'ArrowDown' && snake.dy !== -tileSize) {
+        snake.dx = 0;
+        snake.dy = tileSize;
+      } else if (event.key === 'ArrowLeft' && snake.dx !== tileSize) {
+        snake.dx = -tileSize;
+        snake.dy = 0;
+      } else if (event.key === 'ArrowRight' && snake.dx !== -tileSize) {
+        snake.dx = tileSize;
+        snake.dy = 0;
+      }
+    });
+
+    // Start the game
+    let count = 0;
+    gameLoop();
+  </script>
+</body>
+</html>
